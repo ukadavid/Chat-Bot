@@ -68,6 +68,18 @@ class MessageSchedulerBot extends ActivityHandler {
     constructor() {
         super();
 
+        this.onMembersAdded(async (context, next) => {
+            const membersAdded = context.activity.membersAdded;
+
+            for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
+                if (membersAdded[cnt].id !== context.activity.recipient.id) {
+                    await context.sendActivity("Hello! I am a scheduling bot. You can schedule messages by using the 'schedule' command.");
+                }
+            }
+
+            await next();
+        });
+
         this.onMessage(async (context) => {
             const text = context.activity.text;
 
@@ -81,7 +93,7 @@ class MessageSchedulerBot extends ActivityHandler {
                 // Schedule the message
                 await this.scheduleMessage(context, scheduledTime, messageContent);
             } else {
-                await context.sendActivity('Please enter "schedule [time] [message]" to schedule a message.');
+                await context.sendActivity('Please enter "schedule [DDDD-MM-DDTHH:MM:SS] [message]" to schedule a message.');
             }
         });
     }
@@ -93,10 +105,11 @@ class MessageSchedulerBot extends ActivityHandler {
         const delay = scheduledDate - now;
 
         if (delay <= 0) {
-            await context.sendActivity('The scheduled time must be in the future.');
+            await context.sendActivity('Please set a future date and time for scheduling.');
         } else {
             // Immediate response upon scheduling
-            await context.sendActivity('I will remind you by the scheduled time you inputted.');
+            const scheduledTimeWithoutDate = scheduledTime.split('T')[1].substring(0, 5);
+            await context.sendActivity(`I will remind you by the scheduled time you inputted: ${ scheduledTimeWithoutDate }`);
 
             await this.delay(delay);
 
