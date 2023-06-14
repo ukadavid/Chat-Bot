@@ -95,10 +95,13 @@ class MessageSchedulerBot extends ActivityHandler {
         if (delay <= 0) {
             await context.sendActivity('The scheduled time must be in the future.');
         } else {
+            // Immediate response upon scheduling
+            await context.sendActivity('I will remind you by the scheduled time you inputted.');
+
             await this.delay(delay);
 
             // Send the scheduled message
-            await context.sendActivity(MessageFactory.text(messageContent));
+            await context.sendActivity(`It's time! You scheduled a message with the content: ${ messageContent }`);
         }
     }
 
