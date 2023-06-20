@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 const { ActivityHandler, ActionTypes, MessageFactory, CardFactory, MemoryStorage, ConversationState } = require('botbuilder');
+const util = require('util');
+const delay = util.promisify(setTimeout);
 
 class EmailBot extends ActivityHandler {
     constructor() {
@@ -40,6 +42,12 @@ class EmailBot extends ActivityHandler {
                 // If email is not set, validate and store the provided email
                 if (isValidEmail(text)) {
                     conversationData.email = text;
+                    const anotherAttachment = this.getAnotherAttachment();
+                    const reply = MessageFactory.attachment(anotherAttachment);
+
+                    await delay(2000); // Introduce a delay of 2 seconds
+
+                    await context.sendActivity(reply);
                     await context.sendActivity('Logged in successfully!');
                     // Send the options card to the user
                     await this.displayOptions(context);
@@ -119,7 +127,15 @@ class EmailBot extends ActivityHandler {
 
     getInternetAttachment() {
         return {
-            name: 'architecture-resize.png',
+            name: 'Thank you',
+            contentType: 'image/png',
+            contentUrl: 'https://d1v7g7y4y70yfq.cloudfront.net/02-Blog/Main-Blog-Illustrations/blog-2020-04-07-how_to_say_thank_you_in_business.png'
+        };
+    }
+
+    getAnotherAttachment() {
+        return {
+            name: 'Nice',
             contentType: 'image/png',
             contentUrl: 'https://d1v7g7y4y70yfq.cloudfront.net/02-Blog/Main-Blog-Illustrations/blog-2020-04-07-how_to_say_thank_you_in_business.png'
         };
