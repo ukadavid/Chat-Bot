@@ -1,4 +1,4 @@
-const { ActivityHandler, ActionTypes, MessageFactory, MemoryStorage, CardFactory, ConversationState } = require('botbuilder');
+const { ActivityHandler, CardFactory, MemoryStorage, ConversationState } = require('botbuilder');
 const validateEmailAddresses = require('./validateEmails');
 
 class MyBot extends ActivityHandler {
@@ -11,8 +11,14 @@ class MyBot extends ActivityHandler {
         this.onMembersAdded(async (context, next) => {
             for (const member of context.activity.membersAdded) {
                 if (member.id === context.activity.recipient.id) {
-                    // Prompt the user to input their name
-                    await context.sendActivity('Please enter your name:');
+                    const conversationData = await this.conversationState.get(context, {});
+
+                    if (conversationData.authenticated) {
+                        await this.displayMainMenu(context);
+                    } else {
+                        // Prompt the user to input their name
+                        await context.sendActivity('Please enter your name:');
+                    }
                 }
             }
             await next();
@@ -58,15 +64,32 @@ class MyBot extends ActivityHandler {
                 }
             } else {
                 // Authenticated, handle main menu options
-                const selectedOption = parseInt(text, 10);
-                if (!isNaN(selectedOption) && selectedOption >= 1 && selectedOption <= 6) {
-                    // Option selected, display the selected option
-                    await context.sendActivity(`You selected: Option ${ selectedOption }`);
-                } else {
+                const selectedOption = context.activity.value?.title?.toLowerCase(); // Retrieve the title of the selected option
+
+                switch (selectedOption) {
+                case '':
+                    await context.sendActivity('You selected: Option 1');
+                    break;
+                case 'option 2':
+                    await context.sendActivity('You selected: Option 2');
+                    break;
+                case 'option 3':
+                    await context.sendActivity('You selected: Option 3');
+                    break;
+                case 'option 4':
+                    await context.sendActivity('You selected: Option 4');
+                    break;
+                case 'option 5':
+                    await context.sendActivity('You selected: Option 5');
+                    break;
+                case 'option 6':
+                    await context.sendActivity('You selected: Option 6');
+                    break;
+                default:
                     await context.sendActivity('Invalid option. Please select a valid option:');
+                    break;
                 }
             }
-
             await this.conversationState.set(context, conversationData); // Save conversation state
             await conversationState.saveChanges(context); // Persist changes
 
@@ -75,24 +98,33 @@ class MyBot extends ActivityHandler {
     }
 
     async displayMainMenu(context) {
-        const cardActions = [
-            { type: ActionTypes.ImBack, title: 'Option 1', value: '1' },
-            { type: ActionTypes.ImBack, title: 'Option 2', value: '2' },
-            { type: ActionTypes.ImBack, title: 'Option 3', value: '3' },
-            { type: ActionTypes.ImBack, title: 'Option 4', value: '4' },
-            { type: ActionTypes.ImBack, title: 'Option 5', value: '5' },
-            { type: ActionTypes.ImBack, title: 'Option 6', value: '6' }
-        ];
+        // Create an Adaptive Card instance
+        const adaptiveCard = CardFactory.adaptiveCard({
+            type: 'AdaptiveCard',
+            version: '1.0',
+            body: [
+                {
+                    type: 'Image',
+                    url: 'http://adaptivecards.io/content/adaptive-card-50.png'
+                },
+                {
+                    type: 'TextBlock',
+                    text: '**Main menu**'
+                }
+            ],
+            actions: [
+                { type: 'Action.Submit', title: 'Option 1' },
+                { type: 'Action.Submit', title: 'Option 2' },
+                { type: 'Action.Submit', title: 'Option 3' },
+                { type: 'Action.Submit', title: 'Option 4' },
+                { type: 'Action.Submit', title: 'Option 5' },
+                { type: 'Action.Submit', title: 'Option 6' }
+            ]
+        });
 
-        const card = CardFactory.heroCard(
-            'Main Menu',
-            'Welcome to XYZ, what can I do for you today?',
-            undefined,
-            cardActions
-        );
-
-        const reply = MessageFactory.attachment(card);
-        await context.sendActivity(reply);
+        // Render the adaptive card and send it as a reply
+        const cardMessage = { type: 'message', attachments: [adaptiveCard] };
+        await context.sendActivity(cardMessage);
     }
 }
 

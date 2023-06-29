@@ -16,6 +16,7 @@
         "url": "https://github.com"
     },
     "dependencies": {
+        "adaptivecards": "^3.0.1",
         "botbuilder": "~4.15.0",
         "dotenv": "~8.2.0",
         "email-validator": "^2.0.4",
