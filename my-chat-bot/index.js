@@ -19,7 +19,7 @@ const {
 } = require('botbuilder');
 
 // This bot's main dialog.
-const { EmailBot } = require('./bot');
+const { MyBot } = require('./emailBot');
 
 // Create HTTP server
 const server = restify.createServer();
@@ -68,7 +68,7 @@ const onTurnErrorHandler = async (context, error) => {
 adapter.onTurnError = onTurnErrorHandler;
 
 // Create the main dialog.
-const myBot = new EmailBot();
+const myBot = new MyBot();
 
 // Listen for incoming requests.
 server.post('/api/messages', async (req, res) => {
