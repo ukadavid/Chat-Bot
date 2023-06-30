@@ -2,6 +2,7 @@ const { ActivityHandler, CardFactory, MemoryStorage, ConversationState } = requi
 const axios = require('axios');
 const dotenv = require('dotenv');
 dotenv.config();
+const MovieAPIKey = process.env.MovieAPI;
 
 class MyBot extends ActivityHandler {
     constructor() {
@@ -91,7 +92,7 @@ class MyBot extends ActivityHandler {
     async displayTrendingMovies(context) {
         const response = await axios.get('https://api.themoviedb.org/3/trending/movie/day', {
             params: {
-                api_key: 'YOUR_TMDB_API_KEY'
+                api_key: `${ MovieAPIKey }`
             }
         });
 
