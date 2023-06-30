@@ -62,7 +62,11 @@ class MyBot extends ActivityHandler {
             } else {
                 // Authenticated, handle main menu options
                 if (text.toLowerCase() === 'search') {
+                    conversationData.searching = true;
                     await context.sendActivity('Please enter the movie title you want to search:');
+                } else if (conversationData.searching) {
+                    await this.searchMovies(context, text);
+                    conversationData.searching = false;
                 } else {
                     await context.sendActivity('Invalid option. Please select a valid option or enter "search" to search for a movie:');
                 }
@@ -93,6 +97,31 @@ class MyBot extends ActivityHandler {
         const response = await axios.get('https://api.themoviedb.org/3/trending/movie/day', {
             params: {
                 api_key: `${ MovieAPIKey }`
+            }
+        });
+
+        const movies = response.data.results.slice(0, 10);
+
+        for (const movie of movies) {
+            const card = CardFactory.heroCard(
+                movie.title,
+                movie.overview,
+                [{ url: `https://image.tmdb.org/t/p/w500${ movie.poster_path }` }],
+                [
+                    { type: 'openUrl', title: 'View Details', value: `https://www.themoviedb.org/movie/${ movie.id }` }
+                ]
+            );
+
+            const cardMessage = { type: 'message', attachments: [card] };
+            await context.sendActivity(cardMessage);
+        }
+    }
+
+    async searchMovies(context, movieTitle) {
+        const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
+            params: {
+                api_key: `${ MovieAPIKey }`,
+                query: movieTitle
             }
         });
 
