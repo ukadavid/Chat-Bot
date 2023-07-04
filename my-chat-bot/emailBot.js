@@ -103,32 +103,37 @@ class MyBot extends ActivityHandler {
 
     async displayMainMenu(context) {
         // Create an Adaptive Card instance
-        const adaptiveCard = CardFactory.adaptiveCard({
+        const adaptiveCard = {
+            $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
             type: 'AdaptiveCard',
-            version: '1.0',
+            version: '1.3',
             body: [
                 {
                     type: 'Image',
-                    url: 'http://adaptivecards.io/content/adaptive-card-50.png'
+                    url: 'http://adaptivecards.io/content/adaptive-card-50.png',
+                    size: 'Medium'
                 },
                 {
                     type: 'TextBlock',
-                    text: '**Main menu**'
+                    text: '**Main menu**',
+                    weight: 'Bolder',
+                    size: 'Medium',
+                    horizontalAlignment: 'Center'
                 }
             ],
             actions: [
-                { type: 'Action.Submit', title: 'Option 1' },
-                { type: 'Action.Submit', title: 'Option 2' },
-                { type: 'Action.Submit', title: 'Option 3' },
-                { type: 'Action.Submit', title: 'Option 4' },
-                { type: 'Action.Submit', title: 'Option 5' },
-                { type: 'Action.Submit', title: 'Option 6' }
+                { type: 'Action.Submit', title: 'Option 1', data: { title: 'Option 1' } },
+                { type: 'Action.Submit', title: 'Option 2', data: { title: 'Option 2' } },
+                { type: 'Action.Submit', title: 'Option 3', data: { title: 'Option 3' } },
+                { type: 'Action.Submit', title: 'Option 4', data: { title: 'Option 4' } },
+                { type: 'Action.Submit', title: 'Option 5', data: { title: 'Option 5' } },
+                { type: 'Action.Submit', title: 'Option 6', data: { title: 'Option 6' } }
             ]
-        });
+        };
 
         // Render the adaptive card and send it as a reply
-        const cardMessage = { type: 'message', attachments: [adaptiveCard] };
-        await context.sendActivity(cardMessage);
+        const cardMessage = CardFactory.adaptiveCard(adaptiveCard);
+        await context.sendActivity({ attachments: [cardMessage] });
     }
 }
 
