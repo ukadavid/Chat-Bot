@@ -19,7 +19,7 @@ const {
 } = require('botbuilder');
 
 // This bot's main dialog.
-const { MyBot } = require('./apiBot');
+const { MyBot } = require('./emailBot');
 
 // Create HTTP server
 const server = restify.createServer();

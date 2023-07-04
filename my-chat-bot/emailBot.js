@@ -66,28 +66,32 @@ class MyBot extends ActivityHandler {
                 // Authenticated, handle main menu options
                 const selectedOption = context.activity.value?.title?.toLowerCase(); // Retrieve the title of the selected option
 
-                switch (selectedOption) {
-                case '':
-                    await context.sendActivity('You selected: Option 1');
-                    break;
-                case 'option 2':
-                    await context.sendActivity('You selected: Option 2');
-                    break;
-                case 'option 3':
-                    await context.sendActivity('You selected: Option 3');
-                    break;
-                case 'option 4':
-                    await context.sendActivity('You selected: Option 4');
-                    break;
-                case 'option 5':
-                    await context.sendActivity('You selected: Option 5');
-                    break;
-                case 'option 6':
-                    await context.sendActivity('You selected: Option 6');
-                    break;
-                default:
+                if (selectedOption) {
+                    switch (selectedOption) {
+                    case 'option 1':
+                        await context.sendActivity('You selected: Option 1');
+                        break;
+                    case 'option 2':
+                        await context.sendActivity('You selected: Option 2');
+                        break;
+                    case 'option 3':
+                        await context.sendActivity('You selected: Option 3');
+                        break;
+                    case 'option 4':
+                        await context.sendActivity('You selected: Option 4');
+                        break;
+                    case 'option 5':
+                        await context.sendActivity('You selected: Option 5');
+                        break;
+                    case 'option 6':
+                        await context.sendActivity('You selected: Option 6');
+                        break;
+                    default:
+                        await context.sendActivity(`Invalid option: ${ selectedOption }`);
+                        break;
+                    }
+                } else {
                     await context.sendActivity('Invalid option. Please select a valid option:');
-                    break;
                 }
             }
             await this.conversationState.set(context, conversationData); // Save conversation state
