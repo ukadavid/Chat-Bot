@@ -19,7 +19,7 @@ const {
 } = require('botbuilder');
 
 // This bot's main dialog.
-const { MyBot } = require('./taskThree');
+const { MyBot } = require('./InputMovieAPI');
 
 // Create HTTP server
 const server = restify.createServer();

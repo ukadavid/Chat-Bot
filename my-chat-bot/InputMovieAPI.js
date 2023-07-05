@@ -58,18 +58,17 @@ class MyBot extends ActivityHandler {
                     conversationData.authenticated = true;
 
                     await context.sendActivity('Authentication successful!');
-                    await context.sendActivity('Tell me how I can help?');
+                    await this.displayKeywordMenu(context);
                 } else {
                     // Failed authentication
                     await context.sendActivity('Invalid authentication code. Please try again:');
                 }
             } else {
                 // Authenticated, handle main menu options
-                const restrictedKeywords = ['hi', 'hello', 'bye', 'no', 'yes'];
-                const normalizedText = text.toLowerCase();
+                const keywordSelection = context.activity.value?.title?.toLowerCase();
 
-                if (restrictedKeywords.includes(normalizedText)) {
-                    await this.handleRestrictedKeyword(context, normalizedText);
+                if (keywordSelection) {
+                    await this.handleRestrictedKeyword(context, keywordSelection);
                 } else {
                     await this.sendToAPIAndDisplayResponse(context, text);
                 }
@@ -80,6 +79,40 @@ class MyBot extends ActivityHandler {
 
             await next();
         });
+    }
+
+    async displayKeywordMenu(context) {
+        // Create an Adaptive Card instance
+        const adaptiveCard = {
+            $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+            type: 'AdaptiveCard',
+            version: '1.3',
+            body: [
+                {
+                    type: 'Image',
+                    url: 'http://adaptivecards.io/content/adaptive-card-50.png',
+                    size: 'Medium'
+                },
+                {
+                    type: 'TextBlock',
+                    text: '**Keywords**',
+                    weight: 'Bolder',
+                    size: 'Medium',
+                    horizontalAlignment: 'Center'
+                }
+            ],
+            actions: [
+                { type: 'Action.Submit', title: 'Hi', data: { title: 'hi' } },
+                { type: 'Action.Submit', title: 'Hello', data: { title: 'hello' } },
+                { type: 'Action.Submit', title: 'Bye', data: { title: 'bye' } },
+                { type: 'Action.Submit', title: 'No', data: { title: 'no' } },
+                { type: 'Action.Submit', title: 'Yes', data: { title: 'yes' } }
+            ]
+        };
+
+        // Render the adaptive card and send it as a reply
+        const cardMessage = CardFactory.adaptiveCard(adaptiveCard);
+        await context.sendActivity({ attachments: [cardMessage] });
     }
 
     async handleRestrictedKeyword(context, keyword) {
