@@ -1,6 +1,7 @@
 const { ActivityHandler, CardFactory, MemoryStorage, ConversationState } = require('botbuilder');
+const validateEmailAddresses = require('./validateEmails');
 const axios = require('axios');
-
+const MovieAPIKey = process.env.MovieAPI;
 class MyBot extends ActivityHandler {
     constructor() {
         super();
@@ -35,15 +36,21 @@ class MyBot extends ActivityHandler {
                 // Prompt the user to input their email address
                 await context.sendActivity('Please enter your email address:');
             } else if (!conversationData.email) {
-                // If email is not set, store the provided email
-                conversationData.email = text;
+                // If email is not set, validate and store the provided email
+                const isValidEmail = await validateEmailAddresses(text);
 
-                // Display the name and email address
-                await context.sendActivity(`Name: ${conversationData.name}`);
-                await context.sendActivity(`Email: ${conversationData.email}`);
+                if (isValidEmail) {
+                    conversationData.email = text;
 
-                // Prompt the user to input the authentication code
-                await context.sendActivity('Please enter the authentication code:');
+                    // Display the name and email address
+                    await context.sendActivity(`Name: ${ conversationData.name }`);
+                    await context.sendActivity(`Email: ${ conversationData.email }`);
+
+                    // Prompt the user to input the authentication code
+                    await context.sendActivity('Please enter the authentication code:');
+                } else {
+                    await context.sendActivity('Invalid email address. Please try again:');
+                }
             } else if (!conversationData.authenticated) {
                 // If not authenticated, check the authentication code
                 if (text === '11223344') {
@@ -51,17 +58,20 @@ class MyBot extends ActivityHandler {
                     conversationData.authenticated = true;
 
                     await context.sendActivity('Authentication successful!');
-                    await this.displayMainMenu(context);
+                    await context.sendActivity('Tell me how I can help?');
                 } else {
                     // Failed authentication
                     await context.sendActivity('Invalid authentication code. Please try again:');
                 }
             } else {
-                // Authenticated, handle user prompts
-                if (!['Hi', 'Hello', 'Bye', 'No', 'Yes'].includes(text)) {
-                    // Send the prompt to the API and display the response
-                    const response = await this.callApi(text);
-                    await context.sendActivity(response);
+                // Authenticated, handle main menu options
+                const restrictedKeywords = ['hi', 'hello', 'bye', 'no', 'yes'];
+                const normalizedText = text.toLowerCase();
+
+                if (restrictedKeywords.includes(normalizedText)) {
+                    await this.handleRestrictedKeyword(context, normalizedText);
+                } else {
+                    await this.sendToAPIAndDisplayResponse(context, text);
                 }
             }
 
@@ -72,39 +82,44 @@ class MyBot extends ActivityHandler {
         });
     }
 
-    async displayMainMenu(context) {
-        const adaptiveCard = CardFactory.adaptiveCard({
-            type: 'AdaptiveCard',
-            version: '1.0',
-            body: [
-                {
-                    type: 'TextBlock',
-                    text: 'Welcome to the Main Menu!',
-                    size: 'Large',
-                    weight: 'Bolder'
-                }
-            ],
-            actions: [
-                { type: 'Action.Submit', title: 'Prompt 1', data: 'prompt1' },
-                { type: 'Action.Submit', title: 'Prompt 2', data: 'prompt2' },
-                { type: 'Action.Submit', title: 'Prompt 3', data: 'prompt3' }
-            ]
-        });
-
-        const cardMessage = { type: 'message', attachments: [adaptiveCard] };
-        await context.sendActivity(cardMessage);
+    async handleRestrictedKeyword(context, keyword) {
+        switch (keyword) {
+        case 'hi':
+        case 'hello':
+            await context.sendActivity('Hello! How can I assist you?');
+            break;
+        case 'bye':
+            await context.sendActivity('Goodbye! Have a great day!');
+            break;
+        case 'no':
+        case 'yes':
+            await context.sendActivity('Please provide more information or ask a specific question.');
+            break;
+        }
     }
 
-    async callApi(prompt) {
-        try {
-            const response = await axios.post('https://developer.themoviedb.org /3/search/movie', {
-                prompt: prompt
-            });
+    async sendToAPIAndDisplayResponse(context, text) {
+        // TODO: Call the API with the user's text and get the response
+        const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
+            params: {
+                api_key: `${ MovieAPIKey }`,
+                query: text
+            }
+        });
+        const movies = response.data.results.slice(0, 1);
 
-            return response.data;
-        } catch (error) {
-            console.error('API error:', error);
-            return 'An error occurred while processing your request. Please try again later.';
+        for (const movie of movies) {
+            const card = CardFactory.heroCard(
+                movie.title,
+                movie.overview,
+                [{ url: `https://image.tmdb.org/t/p/w500${ movie.poster_path }` }],
+                [
+                    { type: 'openUrl', title: 'View Details', value: `https://www.themoviedb.org/movie/${ movie.id }` }
+                ]
+            );
+
+            const cardMessage = { type: 'message', attachments: [card] };
+            await context.sendActivity(cardMessage);
         }
     }
 }
