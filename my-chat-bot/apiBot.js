@@ -3,6 +3,9 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 dotenv.config();
 const MovieAPIKey = process.env.MovieAPI;
+const url = process.env.url;
+const specificMovieURL = process.env.specificMovieURL;
+const movieURL = process.env.movieURL;
 
 class MyBot extends ActivityHandler {
     constructor() {
@@ -94,7 +97,7 @@ class MyBot extends ActivityHandler {
     }
 
     async displayTrendingMovies(context) {
-        const response = await axios.get('https://api.themoviedb.org/3/trending/movie/day', {
+        const response = await axios.get(`${ url }trending/movie/day`, {
             params: {
                 api_key: `${ MovieAPIKey }`
             }
@@ -102,23 +105,37 @@ class MyBot extends ActivityHandler {
 
         const movies = response.data.results.slice(0, 10);
 
-        for (const movie of movies) {
-            const card = CardFactory.heroCard(
-                movie.title,
-                movie.overview,
-                [{ url: `https://image.tmdb.org/t/p/w500${ movie.poster_path }` }],
-                [
-                    { type: 'openUrl', title: 'View Details', value: `https://www.themoviedb.org/movie/${ movie.id }` }
-                ]
-            );
+        const carouselAttachments = movies.map(movie => {
+            return {
+                contentType: 'application/vnd.microsoft.card.hero',
+                content: {
+                    title: movie.title,
+                    subtitle: movie.overview,
+                    images: [
+                        { url: `${ specificMovieURL }${ movie.poster_path }?w=200&h=300` }
+                    ],
+                    buttons: [
+                        {
+                            type: 'openUrl',
+                            title: 'View Details',
+                            value: `${ movieURL }${ movie.id }`
+                        }
+                    ]
+                }
+            };
+        });
 
-            const cardMessage = { type: 'message', attachments: [card] };
-            await context.sendActivity(cardMessage);
-        }
+        const carouselMessage = {
+            type: 'message',
+            attachmentLayout: 'carousel',
+            attachments: carouselAttachments
+        };
+
+        await context.sendActivity(carouselMessage);
     }
 
     async searchMovies(context, movieTitle) {
-        const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
+        const response = await axios.get(`${ url }search/movie`, {
             params: {
                 api_key: `${ MovieAPIKey }`,
                 query: movieTitle
@@ -127,19 +144,33 @@ class MyBot extends ActivityHandler {
 
         const movies = response.data.results.slice(0, 10);
 
-        for (const movie of movies) {
-            const card = CardFactory.heroCard(
-                movie.title,
-                movie.overview,
-                [{ url: `https://image.tmdb.org/t/p/w500${ movie.poster_path }` }],
-                [
-                    { type: 'openUrl', title: 'View Details', value: `https://www.themoviedb.org/movie/${ movie.id }` }
-                ]
-            );
+        const carouselAttachments = movies.map(movie => {
+            return {
+                contentType: 'application/vnd.microsoft.card.hero',
+                content: {
+                    title: movie.title,
+                    subtitle: movie.overview,
+                    images: [
+                        { url: `${ specificMovieURL }${ movie.poster_path }?w=200&h=300` }
+                    ],
+                    buttons: [
+                        {
+                            type: 'openUrl',
+                            title: 'View Details',
+                            value: `${ movieURL }${ movie.id }`
+                        }
+                    ]
+                }
+            };
+        });
 
-            const cardMessage = { type: 'message', attachments: [card] };
-            await context.sendActivity(cardMessage);
-        }
+        const carouselMessage = {
+            type: 'message',
+            attachmentLayout: 'carousel',
+            attachments: carouselAttachments
+        };
+
+        await context.sendActivity(carouselMessage);
     }
 }
 
